@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Calendar</title>
+
+    <!-- Internal CSS -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f4f6f9;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+        }
+
+        .calendar-container {
+            width: 100%;
+            max-width: 900px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+            overflow: hidden;
+        }
+
+        /* Header */
+        .calendar-header {
+            background: #4f46e5;
+            color: white;
+            padding: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .calendar-header h1 {
+            font-size: 28px;
+        }
+
+        .calendar-header p {
+            margin-top: 5px;
+            opacity: 0.85;
+        }
+
+        /* Navigation buttons */
+        .navigation {
+            display: flex;
+            gap: 10px;
+        }
+
+        .navigation button {
+            border: none;
+            background: white;
+            color: #4f46e5;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .navigation button:hover {
+            background: #e0e7ff;
+        }
+
+        /* Calendar */
+        .calendar {
+            padding: 25px;
+        }
+
+        .month-year {
+            text-align: center;
+            font-size: 25px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .weekdays,
+        .days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+        }
+
+        .weekdays div {
+            text-align: center;
+            font-weight: bold;
+            color: #666;
+            padding: 12px;
+        }
+
+        .days div {
+            min-height: 90px;
+            border: 1px solid #eee;
+            padding: 10px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .days div:hover {
+            background: #eef2ff;
+        }
+
+        /* Dates from previous/next month */
+        .other-month {
+            color: #bbb;
+            background: #fafafa;
+        }
+
+        /* Current date */
+        .today {
+            background: #4f46e5 !important;
+            color: white;
+            font-weight: bold;
+            border-radius: 5px;
+        }
+
+        /* Event */
+        .event {
+            margin-top: 8px;
+            padding: 4px 6px;
+            background: #22c55e;
+            color: white;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+
+        /* Footer */
+        .calendar-footer {
+            padding: 20px 25px;
+            background: #f8fafc;
+            border-top: 1px solid #eee;
+            text-align: center;
+            color: #666;
+        }
+
+        /* Responsive design */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            .calendar-header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .calendar-header h1 {
+                font-size: 23px;
+            }
+
+            .calendar {
+                padding: 10px;
+            }
+
+            .days div {
+                min-height: 60px;
+                padding: 5px;
+                font-size: 13px;
+            }
+
+            .weekdays div {
+                padding: 8px 2px;
+                font-size: 12px;
+            }
+
+            .event {
+                font-size: 9px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="calendar-container">
+
+        <!-- Header -->
+        <div class="calendar-header">
+            <div>
+                <h1>My Calendar</h1>
+                <p>Manage your schedule</p>
+            </div>
+
+            <div class="navigation">
+                <button onclick="previousMonth()">&#10094;</button>
+                <button onclick="goToToday()">Today</button>
+                <button onclick="nextMonth()">&#10095;</button>
+            </div>
+        </div>
+
+        <!-- Calendar -->
+        <div class="calendar">
+
+            <h2 class="month-year" id="monthYear"></h2>
+
+            <div class="weekdays">
+                <div>Sun</div>
+                <div>Mon</div>
+                <div>Tue</div>
+                <div>Wed</div>
+                <div>Thu</div>
+                <div>Fri</div>
+                <div>Sat</div>
+            </div>
+
+            <div class="days" id="calendarDays"></div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="calendar-footer">
+            © 2026 My Calendar | Plan your day
+        </div>
+
+    </div>
+
+    <script>
+        let currentDate = new Date();
+
+        const monthNames = [
+            "January", "February", "March", "April",
+            "May", "June", "July", "August",
+            "September", "October", "November", "December"
+        ];
+
+        function generateCalendar() {
+
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+
+            document.getElementById("monthYear").textContent =
+                monthNames[month] + " " + year;
+
+            const calendarDays = document.getElementById("calendarDays");
+
+            calendarDays.innerHTML = "";
+
+            // First day of month
+            const firstDay = new Date(year, month, 1).getDay();
+
+            // Number of days in current month
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            // Number of days in previous month
+            const daysInPreviousMonth =
+                new Date(year, month, 0).getDate();
+
+            // Previous month's dates
+            for (let i = firstDay - 1; i >= 0; i--) {
+
+                const day = document.createElement("div");
+
+                day.classList.add("other-month");
+
+                day.textContent =
+                    daysInPreviousMonth - i;
+
+                calendarDays.appendChild(day);
+            }
+
+            // Current month's dates
+            for (let date = 1; date <= daysInMonth; date++) {
+
+                const day = document.createElement("div");
+
+                day.textContent = date;
+
+                // Check today's date
+                const today = new Date();
+
+                if (
+                    date === today.getDate() &&
+                    month === today.getMonth() &&
+                    year === today.getFullYear()
+                ) {
+                    day.classList.add("today");
+                }
+
+                // Example events
+                if (date === 5) {
+                    const event = document.createElement("div");
+                    event.classList.add("event");
+                    event.textContent = "Meeting";
+                    day.appendChild(event);
+                }
+
+                if (date === 15) {
+                    const event = document.createElement("div");
+                    event.classList.add("event");
+                    event.textContent = "Project";
+                    day.appendChild(event);
+                }
+
+                if (date === 25) {
+                    const event = document.createElement("div");
+                    event.classList.add("event");
+                    event.textContent = "Holiday";
+                    day.appendChild(event);
+                }
+
+                calendarDays.appendChild(day);
+            }
+
+            // Fill remaining cells
+            const totalCells = calendarDays.children.length;
+            const remainingCells = 42 - totalCells;
+
+            for (let i = 1; i <= remainingCells; i++) {
+
+                const day = document.createElement("div");
+
+                day.classList.add("other-month");
+
+                day.textContent = i;
+
+                calendarDays.appendChild(day);
+            }
+        }
+
+        function previousMonth() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            generateCalendar();
+        }
+
+        function nextMonth() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            generateCalendar();
+        }
+
+        function goToToday() {
+            currentDate = new Date();
+            generateCalendar();
+        }
+
+        // Generate calendar when page loads
+        generateCalendar();
+    </script>
+
+</body>
+</html>
